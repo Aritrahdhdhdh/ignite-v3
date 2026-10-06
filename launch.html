@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ignite — Launch builder</title>
+<meta name="description" content="Create and launch your Solana token with Ignite.">
+<meta name="theme-color" content="#060707">
+<meta property="og:title" content="Ignite — Launch builder">
+<meta property="og:description" content="Create and launch your Solana token with Ignite.">
+<meta property="og:image" content="/assets/ignite-logo.png">
+<link rel="icon" type="image/png" href="/assets/ignite-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Geist:wght@300..700&amp;family=Geist+Mono:wght@400..600&amp;display=swap">
+<style>
+body{margin:0;background:#060707}
+*{box-sizing:border-box}
+a{color:#C6FF3D}a:hover{color:#E2FF8F}
+.sl{font-family:'Geist',ui-sans-serif,system-ui,sans-serif;color:#ECEFE6;-webkit-font-smoothing:antialiased}
+.disp{font-family:'Archivo','Arial Narrow',sans-serif;font-stretch:125%;font-weight:800;letter-spacing:-0.035em}
+.mono{font-family:'Geist Mono',ui-monospace,SFMono-Regular,monospace}
+.lime{color:#C6FF3D}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.012));border:1px solid rgba(255,255,255,.085);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 24px;border-radius:999px;font:600 15px/1 'Geist',system-ui,sans-serif;text-decoration:none;cursor:pointer;border:0;transition:transform .25s cubic-bezier(.2,.7,.2,1),box-shadow .3s,background .2s,color .2s,opacity .2s}
+.btn-lime{background:#C6FF3D;color:#0A0C05;box-shadow:0 0 0 1px rgba(198,255,61,.45),0 10px 40px -10px rgba(198,255,61,.6)}
+.btn-lime:hover{color:#0A0C05;transform:translateY(-2px);box-shadow:0 0 0 1px rgba(198,255,61,.8),0 16px 60px -8px rgba(198,255,61,.85)}
+.btn-lime:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:rgba(255,255,255,.04);color:#ECEFE6;border:1px solid rgba(255,255,255,.14)}
+.btn-ghost:hover{color:#fff;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.24)}
+.btn-sm{min-height:44px;padding:0 18px;font-size:14px}
+.field{width:100%;height:52px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:0 16px;color:#ECEFE6;font:400 15px 'Geist',system-ui,sans-serif;outline:none;transition:border-color .2s,background .2s,box-shadow .2s}
+.field::placeholder{color:#5E645A}
+.field:focus{border-color:rgba(198,255,61,.6);background:rgba(198,255,61,.03);box-shadow:0 0 0 4px rgba(198,255,61,.08)}
+textarea.field{height:96px;padding:14px 16px;resize:none;line-height:1.5}
+.lbl{font-size:12px;letter-spacing:.14em;color:#8E948A;text-transform:uppercase}
+@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(120px,80px) scale(1.15)}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-140px,-60px) scale(.92)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(198,255,61,.65)}60%{box-shadow:0 0 0 9px rgba(198,255,61,0)}}
+@keyframes spinner{to{transform:rotate(360deg)}}
+@keyframes enter{from{opacity:0;transform:translateY(18px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes livein{0%{opacity:0;transform:scale(.9);letter-spacing:.1em}100%{opacity:1;transform:none}}
+@keyframes ring{0%{transform:scale(.6);opacity:.8}100%{transform:scale(2.4);opacity:0}}
+@keyframes qrscan{0%,100%{top:8%}50%{top:88%}}
+.blob{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none}
+.a1{animation:drift1 22s ease-in-out infinite}.a2{animation:drift2 26s ease-in-out infinite}
+.livedot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#C6FF3D;animation:pulse 1.8s infinite;flex:none}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(198,255,61,.25);border-top-color:#C6FF3D;animation:spinner .8s linear infinite;flex:none}
+.enter{animation:enter .6s cubic-bezier(.2,.7,.2,1) both}
+.rail-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;color:#5E645A;background:transparent;border:1px solid transparent;font:500 14px 'Geist',system-ui,sans-serif;text-align:left;width:100%;min-height:52px;cursor:default;transition:all .35s}
+.rail-item .rn{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font:500 11px 'Geist Mono',monospace;flex:none;transition:all .35s}
+.rail-item.done{color:#A4AA9F;cursor:pointer}
+.rail-item.done:hover{background:rgba(255,255,255,.04)}
+.rail-item.done .rn{background:rgba(198,255,61,.12);border-color:rgba(198,255,61,.4);color:#C6FF3D}
+.rail-item.active{color:#ECEFE6;background:rgba(198,255,61,.07);border-color:rgba(198,255,61,.35)}
+.rail-item.active .rn{background:#C6FF3D;border-color:#C6FF3D;color:#0A0C05;box-shadow:0 0 24px -4px rgba(198,255,61,.9)}
+.stage{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;border:1px solid rgba(255,255,255,.07);color:#5E645A;transition:all .4s}
+.stage .sdot{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none}
+.stage.busy{color:#ECEFE6;border-color:rgba(198,255,61,.35);background:rgba(198,255,61,.05)}
+.stage.done{color:#A4AA9F}
+.stage.done .sdot{background:#C6FF3D;border-color:#C6FF3D}
+.drop{display:flex;align-items:center;gap:16px;padding:16px;border-radius:14px;border:1px dashed rgba(255,255,255,.18);cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover{border-color:rgba(198,255,61,.6);background:rgba(198,255,61,.03)}
+.livebig{animation:livein 1s cubic-bezier(.2,.7,.2,1) both}
+.ringfx{position:absolute;inset:0;border-radius:50%;border:1px solid #C6FF3D;animation:ring 2.4s cubic-bezier(.2,.7,.2,1) infinite}
+.ringfx.r2{animation-delay:1.2s}
+.back{color:#8E948A;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.back:hover{color:#ECEFE6}
+.row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
+.row span:first-child{color:#8E948A}
+.qrline{position:absolute;left:6%;right:6%;height:2px;background:#C6FF3D;box-shadow:0 0 16px 2px rgba(198,255,61,.8);animation:qrscan 3.2s ease-in-out infinite;border-radius:2px}
+.addr{word-break:break-all}
+@keyframes breathe{0%,100%{transform:scale(.94);filter:drop-shadow(0 0 10px rgba(198,255,61,.3))}50%{transform:scale(1.05);filter:drop-shadow(0 0 30px rgba(198,255,61,.75))}}
+@keyframes fill{from{width:0}to{width:100%}}
+@keyframes msgswap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.orbit{position:relative;width:132px;height:132px;display:flex;align-items:center;justify-content:center}
+.orb-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 50%,rgba(198,255,61,.2) 70%,#C6FF3D 92%,transparent 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:spinner 1.3s linear infinite}
+.orb-ring2{position:absolute;inset:16px;border-radius:50%;border:1px dashed rgba(198,255,61,.35);animation:spinner 9s linear infinite reverse}
+.breathe{animation:breathe 2.4s ease-in-out infinite}
+.track{width:100%;max-width:420px;height:4px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+.lbar{height:100%;width:0;background:#C6FF3D;box-shadow:0 0 16px rgba(198,255,61,.8);border-radius:4px;animation-name:fill;animation-timing-function:linear;animation-fill-mode:forwards}
+.swap{animation:msgswap .45s cubic-bezier(.2,.7,.2,1) both}
+.field.err{border-color:rgba(255,154,98,.7);box-shadow:0 0 0 4px rgba(255,154,98,.1)}
+.errbox{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,154,98,.45);background:rgba(255,154,98,.07);color:#FFC3A0;font-size:14px;line-height:1.5;animation:shake .45s ease both}
+@media (max-width:860px){.hide-sm{display:none !important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+</style>
+<style>dc-if,dc-t{display:contents}dc-if[hidden]{display:none}html{scroll-behavior:smooth}</style>
+</head>
+<body>
+<div id="dc-root">
+
+<div class="sl" style="position: relative; overflow: hidden; background: #060707; min-height: 100vh">
+  <div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none">
+    <div class="blob a1" style="top: -240px; left: -200px; width: 640px; height: 640px; background: rgba(198,255,61,0.14)"></div>
+    <div class="blob a2" style="bottom: -260px; right: -200px; width: 700px; height: 700px; background: rgba(198,255,61,0.10)"></div>
+    <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 88px 88px; -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 20%, #000 10%, transparent 70%); mask-image: radial-gradient(ellipse 60% 50% at 50% 20%, #000 10%, transparent 70%)"></div>
+  </div>
+
+  <div style="position: relative; z-index: 1; max-width: 1360px; margin: 0 auto; padding: 18px 24px 48px">
+    <!-- Top bar -->
+    <header class="glass" style="border-radius: 999px; padding: 8px 22px 8px 16px; min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: rgba(10,12,11,0.55)">
+      <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ECEFE6">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-logo alt="" style="width: 38px; height: 38px; display: block">
+        <span class="disp" style="font-size: 19px; letter-spacing: -0.02em">Ignite</span>
+      </a>
+      <div class="mono" style="font-size: 12px; letter-spacing: 0.16em; color: #8E948A">STEP <span class="lime"><dc-t data-text="stepNum"></dc-t></span> / 05 · <dc-t data-text="stepLabel"></dc-t></div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-top: 32px; align-items: flex-start">
+
+      <!-- Stepper rail -->
+      <nav aria-label="Launch steps" class="glass" style="flex: 1 1 240px; max-width: 280px; border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+        <div style="padding: 8px 14px 14px"><a class="back" href="/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M11 6l-6 6 6 6"></path></svg>Back to site</a></div>
+        <template data-for="rail" data-as="r">
+          <button type="button" data-attr-class="rail-item {{r.cls}}" data-on-click="r.go"><span class="rn"><dc-t data-text="r.n"></dc-t></span><span class="mono" style="letter-spacing: 0.12em; font-size: 13px"><dc-t data-text="r.label"></dc-t></span></button>
+        </template>
+      </nav>
+
+      <!-- Main panel -->
+      <main class="glass" style="flex: 999 1 560px; min-width: 0; border-radius: 26px; padding: clamp(24px, 4vw, 48px); min-height: 680px; background: rgba(10,12,11,0.6)">
+
+        <!-- LaunchBuilder: CREATE -->
+        <dc-if data-if="isCreate">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">Create your token.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Name, ticker, supply, art. That is the whole form.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 18px">
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <label class="lbl mono" for="f-name">Name</label>
+                <input id="f-name" class="field" type="text" placeholder="Nova" data-prop-value="form.name" data-on-change="onName" maxlength="32">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <label class="lbl mono" for="f-ticker">Ticker</label>
+                <input id="f-ticker" class="field mono" type="text" placeholder="NOVA" data-prop-value="form.ticker" data-on-change="onTicker" maxlength="10">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <label class="lbl mono" for="f-supply">Supply</label>
+                <input id="f-supply" class="field mono" type="text" inputmode="numeric" placeholder="1000000000" data-prop-value="form.supply" data-on-change="onSupply">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <span class="lbl mono">Art</span>
+                <label class="drop" for="f-art">
+                  <span style="position: relative; overflow: hidden; width: 44px; height: 44px; border-radius: 12px; background: rgba(198,255,61,0.08); border: 1px solid rgba(198,255,61,0.25); display: flex; align-items: center; justify-content: center; flex: none">
+                    <dc-if data-if="hasArt"><img data-attr-src="{{artUrl}}" alt="Token art" data-on-error="onArtError" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></dc-if>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6FF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+                  </span>
+                  <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                    <span style="font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"><dc-t data-text="artLabel"></dc-t></span>
+                    <span class="mono" style="font-size: 12px; color: #6E746A">PNG, JPG or GIF</span>
+                  </span>
+                </label>
+                <input id="f-art" type="file" accept="image/*" data-on-change="onArt" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <label class="lbl mono" for="f-desc">Description <span style="color: #5E645A">(optional)</span></label>
+              <textarea id="f-desc" class="field" placeholder="One line your community will repeat." data-prop-value="form.desc" data-on-change="onDesc"></textarea>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding-top: 8px">
+              <span class="mono" style="font-size: 13px; color: #6E746A"><dc-t data-text="createHint"></dc-t></span>
+              <button type="button" class="btn btn-lime" data-prop-disabled="createBlocked" data-on-click="next">Continue to payment</button>
+            </div>
+          </div>
+        </dc-if>
+
+        <!-- LaunchConfirmation + TransactionStatus: PAY (plain transfer, no wallet connection) -->
+        <dc-if data-if="isPay">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">Pay once.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Send 0.1 SOL to the Ignite wallet from any Solana wallet, then paste the Solscan link of that transaction. No wallet connection.</p>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 28px; align-items: stretch">
+              <!-- QR -->
+              <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; align-items: center">
+                <div style="position: relative; width: 262px; height: 262px; border-radius: 20px; background: #ECEFE6; padding: 8px; box-shadow: 0 0 0 1px rgba(198,255,61,0.35), 0 30px 80px -30px rgba(198,255,61,0.55)">
+                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAApAAAAKQCAIAAACn190HAAALXklEQVR42u3dMY6cUBBFUWOxCMuZ978oZ8gBUm/B2YRjY3dBvV/nLGAEf2iuiN52vo4vAEBvXx0BAAg2ACDYACDYAIBgAwCCDQCCDQAINgAg2AAg2ACAYAOAYAMAgg0ACDYACDYAINgAgGADgGADAIINAAg2AAg2ACDYACDYAIBgAwCCDQCCDQAINgAg2AAg2ACAYAOAYAMAgg0ACDYACDYAINgAgGADgGADAIINAAg2AAg2ACDYACDYAIBgAwCCDQCCDQAINgAg2AAg2ACAYAOAYAMAgg0ACDYACDYAINgAgGADgGADAIINAAg2AAg2ACDYACDYAIBgAwCCDQBr2dNv4Pu3H/6Lb3T8+un/G3SeV8/n6vU4f8+/95svbABAsAFAsAEAwQYABBsABBsAEGwAEGwAQLABAMEGAMEGAAQbABBsABBsAECwAYAvC+xhX5W+h3qVPeNnz7P6/LudT/Xe9rTfr/fb2u83X9gAINgAgGADAIINAIINAAg2AAg2ACDYAIBgA4BgAwCCDQAINgAINgAg2ACAYANAkN0RfK7b3mr6PnT1/VbvK1eff/rzVn3+3faz0/e8vd98YQMAgg0Agg0ACDYAINgAINgAgGADAIINAIINAAg2AAg2ACDYAIBgA4BgAwCCDQD8JXvYtNZtr3fa3na360/fzwZf2AAg2ACAYAMAgg0Agg0ACDYAINgAINgAgGADgGADAIINAAg2AAg2ACDYAIBgA0Aoe9jcqtuecfXedrc95m7n0+156/b3wRc2AAg2ACDYACDYAIBgAwCCDQCCDQAINgAg2AAg2ACAYAOAYDsCABBsAECwAUCwAYAm7GH/gb3bLN32m7vtf7vfZ5+39P8XvrABAMEGAMEGAAQbABBsABBsAECwAUCwAQDBBgAEGwAEGwAQbABAsAFAsAEAwQaAscbtYXfbS+a9uu0xp//9ab/39PPxfvOFDQAINgAg2AAg2ACAYAMAgg0Agg0ACDYACDYAINgAgGADgGADAIINAAg2AAg2AFBkO1+HU+CfddvfTd+TTt9vnrbHPG1fHF/YAIBgA4BgAwCCDQAINgAINgAg2AAg2ACAYAMAgg0Agg0ACDYAINgAINgAgGADwFh7+g1U7wfb9332PKftW3f7vaQ/n+nPm/cPvrABQLABAMEGAMEGAAQbABBsABBsAECwAQDBBgDBBgAEGwAE2xEAgGADAIINAIINADSxO4JnTdt7rr6ebueZvrc9bR962r51+vvHFzYAINgAgGADgGADAIINAAg2AAg2ACDYACDYAIBgAwCCDQCCDQAINgAg2AAg2ADAbbbzdYy64fS922n7u9PYG+bO56fb793z7wsbAAQbABBsAECwAUCwAQDBBgDBBgAEGwAQbAAQbABAsAEAwQYAwQYABBsABBsAaGt3BGvrtp/dbY+8ek/X/WY9n91+X+l7z/atfWEDgGADAIINAAg2AAg2ACDYAIBgA4BgAwCCDQCCDQAINgAg2AAg2ACAYAMAgg0Ay9jO1xF9A+l7wN04H+fT+X677WfbL/f+94UNAAg2AAg2ACDYACDYAIBgAwCCDQCCDQAINgAg2AAg2ACAYAMAgg0Agg0ACDYADDFuD7ta+t6qfdy1pf9epu1npz//3f5f9rABAMEGAAQbAAQbABBsABBsAECwAQDBBgDBBgAEGwAQbAAQbABAsAFAsAEAwQYA/tm4Pexu+7hXTduLnbZPPO35mbZnb6/d+fjCBgDBBgAEGwAQbAAQbABAsAEAwQYAwQYABBsABBsAEGwAQLABQLABAMEGAAQbAELF72Ff1W1/t5r9b9f/P9eT/vtKP/9u+9Dp78/0/Wxf2AAg2ACAYAOAYAMAgg0ACDYACDYAINgAgGADgGADAIINAIINAAg2ACDYACDYAMCD4vewp+1bV+u219ttD5i13w/2y7Ou3xc2ACDYAIBgA4BgAwCCDQAINgAINgAg2AAg2ACAYAMAgg0Agg0ACDYAINgAINgAwG32aTecvsecvg9dvb87bf/Y9Xh+Jl9/t+fHFzYAINgAINgAgGADgGADAIINAAg2AAg2ACDYAIBgA4BgAwCCDQCCDQAINgAg2ACwsO18HU7hjar3XKtN2wvvdj7pz0P6/yv9/ZB+v+l71b6wAQDBBgDBBgAEGwAEGwAQbABAsAFAsAEAwQYABBsABBsAEGwAEGwAQLABAMEGgIXtjuBz6XvP0/Zx0/ebr7If7P975++r+nzsZ/vCBgDBBgAEGwAQbAAQbABAsAFAsAEAwQYABBsABBsAEGwAQLABQLABAMEGAMEGANraztcRfQP2U997Pt2k74s7/6zfb7fnwd658/SFDQCCDQAINgAINgAg2ACAYAOAYAMAgg0ACDYACDYAINgAINiOAAAEGwAQbAAQbACgiX3aDafv716Vfv3T9m7Tr7/b8+B9tfbz4AsbABBsAECwAUCwAQDBBgAEGwAEGwAQbAAQbABAsAEAwQYAwQYABBsAEGwAEGwA4Dbb+Tqib2DavnW1aXu6V++32/+32/NcfZ7+vueh8/vKFzYAINgAINgAgGADgGADAIINAAg2AAg2ACDYAIBgA4BgAwCCDQCCDQAINgAg2ACwMHvYYdfj76/9fFZznmufZ7ffb/V5Tnuf+MIGAMEGAAQbAAQbABBsAECwAUCwAQDBBgAEGwAEGwAQbAAQbABAsAEAwQYAwQYAHmQP2/Xcej3puu0xV5v2PEz7/3Z7frrtbfvCBgAEGwAEGwAQbABAsAFAsAEAwQYAwQYABBsAEGwAEGwAQLABAMEGAMEGAAQbAPgQv4fNs+wHv1e3vd7qPfVuz0/19fv/On9f2ACwOMEGAMEGAAQbAAQbABBsAECwAUCwAQDBBgAEGwAEGwAQbAAQbABAsAEAwQaAdcXvYdtjfq/0vdhpz2f6/2va7zd9T9r7yhc2ACDYACDYAIBgAwCCDQCCDQAINgAINgAg2ACAYAOAYAMAgg0ACDYACDYAINgAMNY+7Yan7adW791O29Pttk9cfT3Vz4N9aO+rzs+bL2wAQLABQLABAMEGAAQbAAQbABBsABBsAECwAQDBBgDBBgAEGwAQbAAQbABAsAGAD7sj+Jx93GevP/38u11/9X5w9fPZ7e9X75en/36nvZ99YQMAgg0Agg0ACDYACDYAINgAgGADgGADAIINAAg2AAg2ACDYACDYAIBgAwCCDQALs4dNa9X7u+n70NV7wNP2htOff8+DL2wAQLABAMEGAMEGAAQbABBsABBsAECwAUCwAQDBBgAEGwAEGwAQbABAsAFAsAGAIvawuVX1/nS3vd7q66k+n/Q9cn9/7d+7L2wAQLABAMEGAMEGAAQbABBsABBsAECwAUCwAQDBBgAEGwAEGwAQbABAsAFAsAGA29jD/gP7rO89n2571fak177fac9Pt/11fGEDgGADAIINAAg2AAg2ACDYAIBgA4BgAwCCDQCCDQAINgAg2AAg2ACAYAMAgg0Ay9jO1xF9A932cdNN29+dtq/c7fz93td+/tP3131hAwCCDQCCDQAINgAg2AAg2ACAYAOAYAMAgg0ACDYACDYAINgAgGADgGADAIINAHyI38MGAF/YAIBgAwCCDQCCDQAINgAg2AAg2ACAYAOAYAMAgg0ACDYACDYAINgAgGADgGADAIINAIINAAg2ACDYACDYAIBgAwCCDQCCDQAINgAg2AAg2ACAYAOAYAMAgg0ACDYACDYAINgAgGADgGADAIINAILtCABAsAEAwQYAwQYABBsAEGwAEGwAQLABAMEGAMEGAAQbAAQbABBsAECwAUCwAQDBBgAEGwAEGwAQbABAsAFAsAEAwQYAwQYABBsAEGwAEGwAQLABAMEGgDi/AadvEZNJdRDxAAAAAElFTkSuQmCC" alt="QR code to pay 0.1 SOL to the Ignite wallet" style="width: 246px; height: 246px; display: block; image-rendering: pixelated; border-radius: 12px">
+                  <dc-if data-if="payIdle"><span class="qrline" aria-hidden="true"></span></dc-if>
+                </div>
+                <span class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: #6E746A">SCAN WITH ANY SOLANA WALLET</span>
+              </div>
+
+              <!-- Details -->
+              <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <span class="lbl mono">Amount</span>
+                  <span class="disp" style="font-size: 44px; line-height: 1">0.1 <span class="lime">SOL</span></span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <span class="lbl mono">Send to</span>
+                  <div style="display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03)">
+                    <span class="mono addr" style="flex: 1; min-width: 0; font-size: 14px; line-height: 1.5"><dc-t data-text="payAddress"></dc-t></span>
+                    <button type="button" class="btn btn-ghost btn-sm" data-on-click="copyAddress" style="flex: none"><dc-t data-text="copyAddrLabel"></dc-t></button>
+                  </div>
+                  <span class="mono" style="font-size: 12px; color: #6E746A">Solana mainnet only. Send at least 0.1 SOL.</span>
+                </div>
+                <div style="display: flex; flex-direction: column">
+                  <div class="row"><span>Token</span><span><dc-t data-text="tokenName"></dc-t></span></div>
+                  <div class="row"><span>Ticker</span><span class="mono"><dc-t data-text="tokenTicker"></dc-t></span></div>
+                  <div class="row" style="border-bottom: 0"><span>Supply</span><span class="mono"><dc-t data-text="tokenSupply"></dc-t></span></div>
+                </div>
+              </div>
+            </div>
+
+            <dc-if data-if="payIdle">
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <label class="lbl mono" for="f-tx">Transaction link</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 12px">
+                  <input id="f-tx" data-attr-class="field mono {{txFieldCls}}" type="text" placeholder="https://solscan.io/tx/…" data-prop-value="txInput" data-on-change="onTx" style="flex: 1 1 320px; min-width: 0" autocomplete="off" spellcheck="false">
+                  <button type="button" class="btn btn-lime" data-prop-disabled="txBlocked" data-on-click="verifyTx" style="min-height: 52px">Verify payment</button>
+                </div>
+                <dc-if data-if="payHasError">
+                  <div class="errbox" role="alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9A62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg>
+                    <span><strong style="color: #FFD9C2"><dc-t data-text="payErrorTitle"></dc-t></strong> <dc-t data-text="payError"></dc-t></span>
+                  </div>
+                </dc-if>
+              </div>
+            </dc-if>
+            <dc-if data-if="payChecking">
+              <div class="glass enter" style="border-radius: 20px; padding: 36px 24px; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center">
+                <div class="orbit" aria-hidden="true">
+                  <span class="orb-ring"></span><span class="orb-ring2"></span>
+                  <img class="breathe" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-logo alt="" style="width: 70px; height: 70px">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: center" role="status">
+                  <template data-for="payMsgList" data-as="m"><span class="swap" style="font-size: 16px"><dc-t data-text="m.text"></dc-t></span></template>
+                  <span class="mono" style="font-size: 12px; color: #8E948A">Checking the transaction on Solana</span>
+                </div>
+                <div class="track"><div class="lbar" data-attr-style="animation-duration: {{payMs}}"></div></div>
+              </div>
+            </dc-if>
+            <dc-if data-if="payDone">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-radius: 16px; border: 1px solid rgba(198,255,61,0.4); background: rgba(198,255,61,0.07)">
+                <span style="display: flex; align-items: center; gap: 12px">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6FF3D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>
+                  <span style="display: flex; flex-direction: column; gap: 4px">
+                    <span style="font-size: 15px">Payment verified on Solana.</span>
+                    <span class="mono" style="font-size: 12px; color: #8E948A">tx <dc-t data-text="payTx"></dc-t></span>
+                  </span>
+                </span>
+                <button type="button" class="btn btn-lime" data-on-click="next">Connect Telegram</button>
+              </div>
+            </dc-if>
+          </div>
+        </dc-if>
+
+        <!-- CONNECT (Telegram) -->
+        <dc-if data-if="isConnect">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">Connect Telegram.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Open the Ignite bot and send this one-time code. That ties this launch to your Telegram.</p>
+            </div>
+            <div class="glass" style="border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start">
+              <span class="lbl mono">Send to @IgniteLauncherXbot</span>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+                <span class="disp mono" style="font-size: clamp(28px, 4vw, 44px); letter-spacing: 0.02em; font-stretch: 100%">/start <span class="lime"><dc-t data-text="linkCode"></dc-t></span></span>
+                <button type="button" class="btn btn-ghost btn-sm" data-on-click="copyCode"><dc-t data-text="copyLabel"></dc-t></button>
+              </div>
+              <a class="btn btn-lime btn-sm" href="https://t.me/IgniteLauncherXbot" target="_blank" rel="noopener noreferrer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4L3 11l6 2 2 6 3-4 5 4z"></path></svg>
+                Open the bot
+              </a>
+            </div>
+            <dc-if data-if="connectIdle">
+              <div style="display: flex; justify-content: flex-end"><button type="button" class="btn btn-lime" data-on-click="checkLink">I sent it</button></div>
+            </dc-if>
+            <dc-if data-if="connectChecking">
+              <div class="glass enter" style="border-radius: 20px; padding: 36px 24px; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center">
+                <div class="orbit" aria-hidden="true">
+                  <span class="orb-ring"></span><span class="orb-ring2"></span>
+                  <img class="breathe" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-logo alt="" style="width: 70px; height: 70px">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: center" role="status">
+                  <template data-for="linkMsgList" data-as="m"><span class="swap" style="font-size: 16px"><dc-t data-text="m.text"></dc-t></span></template>
+                  <span class="mono" style="font-size: 12px; color: #8E948A">This takes a few seconds</span>
+                </div>
+                <div class="track"><div class="lbar" data-attr-style="animation-duration: {{linkMs}}"></div></div>
+              </div>
+            </dc-if>
+            <dc-if data-if="connectDone">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-radius: 16px; border: 1px solid rgba(198,255,61,0.4); background: rgba(198,255,61,0.07)">
+                <span style="display: flex; align-items: center; gap: 12px; font-size: 15px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6FF3D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>Telegram connected.</span>
+                <button type="button" class="btn btn-lime" data-on-click="next">Review and execute</button>
+              </div>
+            </dc-if>
+          </div>
+        </dc-if>
+
+        <!-- EXECUTE (nothing to sign) -->
+        <dc-if data-if="isExecute">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">One command.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Execute here, or type <span class="mono lime">/launch</span> to the bot. Same result.</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <template data-for="stages" data-as="st">
+                <div data-attr-class="stage {{st.cls}}">
+                  <span class="sdot">
+                    <dc-if data-if="st.busy"><span class="spin" style="width: 14px; height: 14px"></span></dc-if>
+                    <dc-if data-if="st.done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0A0C05" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></dc-if>
+                  </span>
+                  <span style="font-size: 15px; flex: 1"><dc-t data-text="st.label"></dc-t></span>
+                  <span class="mono" style="font-size: 12px"><dc-t data-text="st.note"></dc-t></span>
+                </div>
+              </template>
+            </div>
+            <dc-if data-if="execIdle">
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px">
+                <span class="mono" style="font-size: 13px; color: #6E746A">Nothing to sign. Ignite handles it.</span>
+                <button type="button" class="btn btn-lime" data-on-click="execute" style="min-height: 60px; padding: 0 36px; font-size: 17px">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-5-6-5"></path><path d="M12 19h8"></path></svg>
+                  Execute launch
+                </button>
+              </div>
+            </dc-if>
+          </div>
+        </dc-if>
+
+        <!-- LiveLaunch -->
+        <dc-if data-if="isLive">
+          <div class="enter" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 32px; padding: 24px 0; min-width: 0; overflow: hidden">
+            <div style="position: relative; width: 120px; height: 120px">
+              <span class="ringfx"></span><span class="ringfx r2"></span>
+              <span class="disp" style="position: absolute; inset: 0; border-radius: 50%; background: #C6FF3D; color: #0A0C05; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 0 80px -10px rgba(198,255,61,0.9); overflow: hidden"><dc-t data-text="initial"></dc-t><dc-if data-if="hasArt"><img data-attr-src="{{artUrl}}" alt="Token art" data-on-error="onArtError" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%"></dc-if></span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px; align-items: center">
+              <div class="mono" style="display: inline-flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: 0.2em; color: #C6FF3D"><span class="livedot"></span>LIVE ON SOLANA</div>
+              <div style="width: 100%; max-width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 8px; align-items: center">
+                <h1 class="disp livebig" data-attr-style="margin: 0; max-width: 100%; font-size: {{liveFont}}; line-height: 0.95; overflow-wrap: anywhere; word-break: break-all"><dc-t data-text="tokenTicker"></dc-t></h1>
+                <span class="disp" style="font-size: clamp(30px, 4vw, 52px); line-height: 1">is live.</span>
+              </div>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">The details are waiting in your Telegram.</p>
+            </div>
+            <button type="button" class="btn btn-lime" data-on-click="reset" style="min-height: 56px; padding: 0 32px">Launch another</button>
+          </div>
+        </dc-if>
+      </main>
+
+      <!-- Token preview -->
+      <aside class="hide-sm" style="flex: 1 1 300px; max-width: 340px; display: flex; flex-direction: column; gap: 16px">
+        <div class="glass" style="border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 22px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span class="lbl mono">Preview</span>
+            <span class="mono" style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.14em; color: #C6FF3D"><span class="livedot"></span><dc-t data-text="previewStatus"></dc-t></span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px">
+            <span class="disp" style="position: relative; overflow: hidden; width: 64px; height: 64px; border-radius: 18px; background: #C6FF3D; color: #0A0C05; display: flex; align-items: center; justify-content: center; font-size: 28px; flex: none"><dc-t data-text="initial"></dc-t><dc-if data-if="hasArt"><img data-attr-src="{{artUrl}}" alt="Token art" data-on-error="onArtError" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #0B0D0C"></dc-if></span>
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+              <span class="disp" style="font-size: 22px; letter-spacing: -0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"><dc-t data-text="tokenName"></dc-t></span>
+              <span class="mono lime" style="font-size: 14px"><dc-t data-text="tokenTicker"></dc-t></span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <div class="row"><span>Supply</span><span class="mono"><dc-t data-text="tokenSupply"></dc-t></span></div>
+            <div class="row"><span>Payment</span><span class="mono"><dc-t data-text="payShort"></dc-t></span></div>
+            <div class="row" style="border-bottom: 0"><span>Telegram</span><span class="mono"><dc-t data-text="tgShort"></dc-t></span></div>
+          </div>
+        </div>
+        <div class="glass mono" style="border-radius: 18px; padding: 18px 20px; font-size: 12px; line-height: 1.7; color: #6E746A">
+          <span class="lime">tip</span> · Ignite never asks to connect your wallet or sign anything.
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+</div>
+<script>(function(){var L="data:image/webp;base64,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";document.querySelectorAll("img[data-logo]").forEach(function(i){i.src=L;});var f=document.querySelector("link[rel=icon]");if(f)f.href=L;})();</script>
+<script src="/dc-lite.js"></script>
+<script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Component.initialState();
+    this.timers = [];
+  }
+
+  static PAY_ADDRESS = '6XakoaCtw7CEb3a9Qnt1fhjKi8Bst1U1Muns6Bch45aw';
+  static FEE_LAMPORTS = 100000000; // 0.1 SOL
+  // Public endpoint works for testing; use your own RPC (Helius, QuickNode, Triton) in production.
+  static RPC_URL = 'https://api.mainnet-beta.solana.com';
+  static VERIFY_MS = 10000;
+  static PAY_MSGS = ['Fetching your transaction', 'Checking the recipient', 'Confirming the amount', 'Finalizing'];
+  static LINK_MSGS = ['Waiting for your /start message', 'Talking to the Ignite bot', 'Linking this launch to your Telegram'];
+
+  static initialState() {
+    return {
+      step: 0,
+      form: { name: '', ticker: '', supply: '1000000000', desc: '' },
+      artName: '', artUrl: '',
+      pay: 'idle', txInput: '', payError: '', payErrorTitle: '', paySig: '', addrCopied: false, payMsgIdx: 0,
+      link: 'idle', linkCode: '7F3K-Q9', copied: false, linkMs: 12000, linkMsgIdx: 0,
+      exec: 'idle', stageIdx: -1
+    };
+  }
+
+  static STEPS = ['CREATE', 'PAY', 'CONNECT', 'EXECUTE', 'LIVE'];
+  static STAGES = [
+    { label: 'Mint token', note: 'spl' },
+    { label: 'Upload metadata', note: 'ipfs' },
+    { label: 'Broadcast to Solana', note: 'mainnet' },
+    { label: 'Notify you on Telegram', note: 'bot' }
+  ];
+
+  wait(ms) { return new Promise((r) => { const t = setTimeout(r, ms); this.timers.push(t); }); }
+  cycle(key, list, every) {
+    clearInterval(this.cycler);
+    this.setState({ [key]: 0 });
+    this.cycler = setInterval(() => this.setState((s) => ({ [key]: Math.min(s[key] + 1, list.length - 1) })), every);
+  }
+  stopCycle() { clearInterval(this.cycler); }
+  componentWillUnmount() { this.timers.forEach(clearTimeout); clearInterval(this.cycler); }
+
+  // ---------------------------------------------------------------
+  // PAYMENT VERIFICATION (real, on-chain)
+  // Accepts a Solscan link (solscan.io/tx/<sig>), other explorer links,
+  // or a bare signature. Reads the transaction from Solana RPC — the
+  // same data Solscan shows — and checks it succeeded and moved at
+  // least 0.1 SOL into PAY_ADDRESS.
+  // ---------------------------------------------------------------
+  static parseSignature(input) {
+    const t = String(input || '').trim();
+    const m = t.match(/(?:solscan\.io|explorer\.solana\.com|solana\.fm|orb\.helius\.dev)\/tx\/([1-9A-HJ-NP-Za-km-z]{80,90})(?:[?#/].*)?$/);
+    if (m) return m[1];
+    if (/^[1-9A-HJ-NP-Za-km-z]{80,90}$/.test(t)) return t;
+    return null;
+  }
+
+  async verifyPaymentOnChain(sig) {
+    let body;
+    try {
+      const r = await fetch(Component.RPC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0', id: 1, method: 'getTransaction',
+          params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]
+        })
+      });
+      if (!r.ok) return { ok: false, reason: 'network' };
+      body = await r.json();
+    } catch (err) {
+      return { ok: false, reason: 'network' };
+    }
+    if (body.error) return { ok: false, reason: 'notfound' };
+    const tx = body.result;
+    if (!tx || !tx.meta || !tx.transaction) return { ok: false, reason: 'notfound' };
+    if (tx.meta.err) return { ok: false, reason: 'failed' };
+    const keys = tx.transaction.message.accountKeys.map((k) => (typeof k === 'string' ? k : k.pubkey));
+    const idx = keys.indexOf(Component.PAY_ADDRESS);
+    if (idx < 0) return { ok: false, reason: 'recipient' };
+    const received = tx.meta.postBalances[idx] - tx.meta.preBalances[idx];
+    if (received < Component.FEE_LAMPORTS) return { ok: false, reason: 'amount', received };
+    return { ok: true, sig, received };
+  }
+
+  static errorFor(res) {
+    const tail = 'Paste the correct Solscan transaction link.';
+    switch (res.reason) {
+      case 'format': return ['Invalid transaction.', 'That is not a transaction link. ' + tail];
+      case 'notfound': return ['Invalid transaction.', 'We could not find it on Solana. ' + tail];
+      case 'failed': return ['Invalid transaction.', 'That transaction failed on-chain. ' + tail];
+      case 'recipient': return ['Invalid transaction.', 'It did not send SOL to the Ignite wallet. ' + tail];
+      case 'amount': return ['Invalid transaction.', 'It sent ' + (Math.max(0, res.received) / 1e9).toFixed(4) + ' SOL. The fee is 0.1 SOL. ' + tail];
+      default: return ['Could not verify.', 'We could not reach the Solana network. Check your connection and try again.'];
+    }
+  }
+
+  async runVerify() {
+    const sig = Component.parseSignature(this.state.txInput);
+    this.setState({ pay: 'checking', payError: '', payErrorTitle: '' });
+    this.cycle('payMsgIdx', Component.PAY_MSGS, Component.VERIFY_MS / Component.PAY_MSGS.length);
+    let check;
+    if (!sig) check = Promise.resolve({ ok: false, reason: 'format' });
+    else if (this.props.simulateVerify) check = Promise.resolve({ ok: true, sig });
+    else check = this.verifyPaymentOnChain(sig);
+    const [res] = await Promise.all([check, this.wait(Component.VERIFY_MS)]);
+    this.stopCycle();
+    if (res.ok) {
+      this.setState({ pay: 'done', paySig: res.sig });
+    } else {
+      const [title, msg] = Component.errorFor(res);
+      this.setState({ pay: 'idle', payErrorTitle: title, payError: msg });
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // TELEGRAM LINK — waits 10–15s. Swap for a real poll of your bot
+  // backend ("has /start <code> arrived?") when it exists.
+  // ---------------------------------------------------------------
+  async runLink() {
+    const ms = 10000 + Math.floor(Math.random() * 5000);
+    this.setState({ link: 'checking', linkMs: ms });
+    this.cycle('linkMsgIdx', Component.LINK_MSGS, ms / Component.LINK_MSGS.length);
+    await this.wait(ms);
+    this.stopCycle();
+    this.setState({ link: 'done' });
+  }
+
+  async apiExecuteLaunch(onStage) {
+    for (let i = 0; i < Component.STAGES.length; i++) { onStage(i); await this.wait(1200); }
+    onStage(Component.STAGES.length);
+  }
+
+  setForm(key, value) { this.setState((s) => ({ form: { ...s.form, [key]: value } })); }
+  copy(text) {
+    const fallback = () => { const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} t.remove(); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(fallback);
+      else fallback();
+    } catch (err) { fallback(); }
+  }
+
+  renderVals() {
+    const s = this.state;
+    const f = s.form;
+    const name = f.name.trim() || 'Your token';
+    const ticker = '$' + (f.ticker.trim().toUpperCase() || 'TICKER');
+    const supplyNum = Number(String(f.supply).replace(/[^0-9]/g, ''));
+    const supply = supplyNum ? supplyNum.toLocaleString('en-US') : '—';
+    const createBlocked = !(f.name.trim() && f.ticker.trim() && supplyNum > 0);
+    const step = s.step;
+    const last = Component.STEPS.length - 1;
+    const next = () => this.setState((st) => ({ step: Math.min(st.step + 1, last) }));
+
+    // Fit the live ticker inside the panel at any length.
+    const chars = Math.max(ticker.length, 4) * 0.95;
+    const px = Math.max(28, Math.min(104, Math.floor(520 / chars)));
+    const liveFont = 'min(' + px + 'px, calc((100vw - 96px) / ' + chars.toFixed(2) + '))';
+
+    const rail = Component.STEPS.map((label, i) => ({
+      n: '0' + (i + 1),
+      label,
+      cls: i < step ? 'done' : i === step ? 'active' : '',
+      go: () => { if (i < step && step < last && s.pay !== 'checking' && s.link !== 'checking') this.setState({ step: i }); }
+    }));
+
+    const stages = Component.STAGES.map((st, i) => ({
+      ...st,
+      busy: s.stageIdx === i,
+      done: s.stageIdx > i,
+      cls: s.stageIdx === i ? 'busy' : s.stageIdx > i ? 'done' : ''
+    }));
+
+    const sig = s.paySig;
+    return {
+      form: f,
+      rail,
+      stepNum: '0' + (step + 1),
+      stepLabel: Component.STEPS[step],
+      isCreate: step === 0, isPay: step === 1, isConnect: step === 2,
+      isExecute: step === 3, isLive: step === 4,
+      next,
+
+      tokenName: name, tokenTicker: ticker, tokenSupply: supply,
+      initial: name.charAt(0).toUpperCase(),
+      liveFont,
+      previewStatus: step === last ? 'LIVE' : 'DRAFT',
+      payShort: s.pay === 'done' ? 'verified' : 'pending',
+      tgShort: s.link === 'done' ? 'connected' : 'not linked',
+
+      onName: (e) => this.setForm('name', e.target.value),
+      onTicker: (e) => this.setForm('ticker', e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()),
+      onSupply: (e) => this.setForm('supply', e.target.value.replace(/[^0-9]/g, '')),
+      onDesc: (e) => this.setForm('desc', e.target.value),
+      onArt: (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!/^image\//.test(file.type)) { this.setState({ artName: 'Please choose an image file', artUrl: '' }); return; }
+        // Read as a data URL so the preview works without any upload.
+        // In production, upload `file` to your storage (IPFS etc.) for the token metadata.
+        const reader = new FileReader();
+        reader.onload = () => this.setState({ artName: file.name, artUrl: String(reader.result || '') });
+        reader.onerror = () => this.setState({ artName: 'Could not read that image', artUrl: '' });
+        reader.readAsDataURL(file);
+        e.target.value = '';
+      },
+      hasArt: !!s.artUrl,
+      artUrl: s.artUrl,
+      onArtError: () => this.setState({ artUrl: '' }),
+      artLabel: s.artName || 'Drop or choose an image',
+      createBlocked,
+      createHint: createBlocked ? 'Name, ticker and supply are required.' : 'Looks good. ' + ticker + ' is ready.',
+
+      payAddress: Component.PAY_ADDRESS,
+      copyAddrLabel: s.addrCopied ? 'Copied' : 'Copy',
+      copyAddress: () => { this.copy(Component.PAY_ADDRESS); this.setState({ addrCopied: true }); },
+      txInput: s.txInput,
+      onTx: (e) => this.setState({ txInput: e.target.value, payError: '', payErrorTitle: '' }),
+      txBlocked: !s.txInput.trim(),
+      txFieldCls: s.payError ? 'err' : '',
+      verifyTx: () => this.runVerify(),
+      payIdle: s.pay === 'idle',
+      payChecking: s.pay === 'checking',
+      payDone: s.pay === 'done',
+      payHasError: !!s.payError,
+      payError: s.payError,
+      payErrorTitle: s.payErrorTitle,
+      payMsgList: [{ text: Component.PAY_MSGS[s.payMsgIdx] }],
+      payMs: Component.VERIFY_MS + 'ms',
+      payTx: sig ? sig.slice(0, 6) + '…' + sig.slice(-6) : '',
+
+      linkCode: s.linkCode,
+      copyLabel: s.copied ? 'Copied' : 'Copy',
+      copyCode: () => { this.copy('/start ' + s.linkCode); this.setState({ copied: true }); },
+      connectIdle: s.link === 'idle',
+      connectChecking: s.link === 'checking',
+      connectDone: s.link === 'done',
+      linkMsgList: [{ text: Component.LINK_MSGS[s.linkMsgIdx] }],
+      linkMs: s.linkMs + 'ms',
+      checkLink: () => this.runLink(),
+
+      stages,
+      execIdle: s.exec === 'idle',
+      execute: async () => {
+        this.setState({ exec: 'running' });
+        await this.apiExecuteLaunch((i) => this.setState({ stageIdx: i }));
+        await this.wait(500);
+        this.setState({ exec: 'done', step: last });
+      },
+
+      reset: () => this.setState(Component.initialState())
+    };
+  }
+}
+DCLite.mount(Component, {"simulateVerify": false});
+</script>
+</body>
+</html>
